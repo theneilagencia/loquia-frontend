@@ -1,102 +1,404 @@
 "use client";
-import { useState } from "react";
 
-const initialState = {
-  title: "",
-  description: "",
-  category: "",
-  photo: "",
-  price: "",
-  address: "",
-  whatsapp: "",
-  site: "",
-};
+import { useEffect, useState } from "react";
+import { supabase } from "@/lib/supabaseClient";
+import { useRouter } from "next/navigation";
+import Button from "../components/ui/Button";
+
+interface CatalogItem {
+  id: string;
+  tenant_id: string;
+  title: string;
+  description: string;
+  category: string;
+  price?: string;
+  photo?: string;
+  address?: string;
+  whatsapp?: string;
+  site?: string;
+  created_at: string;
+}
 
 export default function CatalogPage() {
-  const [form, setForm] = useState(initialState);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState("");
-  const [success, setSuccess] = useState(false);
+  const router = useRouter();
+  const [items, setItems] = useState<CatalogItem[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [showForm, setShowForm] = useState(false);
+  const [editingItem, setEditingItem] = useState<CatalogItem | null>(null);
+  
+  // Form state
+  const [formData, setFormData] = useState({
+    title: "",
+    description: "",
+    category: "",
+    price: "",
+    photo: "",
+    address: "",
+    whatsapp: "",
+    site: "",
+  });
 
-  function handleChange(e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) {
-    setForm({ ...form, [e.target.name]: e.target.value });
+  useEffect(() => {
+    checkUser();
+    loadItems();
+  }, []);
+
+  async function checkUser() {
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) {
+      router.push("/login");
+    }
   }
 
-  async function handleSubmit(e: React.FormEvent) {
-    e.preventDefault();
-    setLoading(true);
-    setError("");
-    setSuccess(false);
+  async function loadItems() {
     try {
-      const apiUrl = process.env.NEXT_PUBLIC_API_URL || "";
-      const res = await fetch(`${apiUrl}/catalog`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(form),
-      });
-      if (!res.ok) {
-        const data = await res.json();
-        throw new Error(data.message || "Erro ao salvar catálogo");
-      }
-      setSuccess(true);
-    } catch (err: any) {
-      setError(err.message);
+      const { data, error } = await supabase
+        .from("catalog")
+        .select("*")
+        .order("created_at", { ascending: false });
+
+      if (error) throw error;
+      setItems(data || []);
+    } catch (error) {
+      console.error("Erro ao carregar itens:", error);
     } finally {
       setLoading(false);
     }
   }
 
-  return (
-    <div className="min-h-screen flex flex-col items-center bg-[#f9fafb] py-12 px-4">
-      <h1 className="text-3xl md:text-4xl font-bold text-[#22223b] mb-10">Editar Catálogo</h1>
-      <form
-        onSubmit={handleSubmit}
-        className="bg-white rounded-2xl shadow-lg p-10 w-full max-w-2xl flex flex-col gap-6 border border-[#e9ecef]"
-      >
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          <div className="flex flex-col gap-2">
-            <label htmlFor="title" className="text-sm font-medium text-[#22223b]">Título</label>
-            <input id="title" name="title" type="text" required value={form.title} onChange={handleChange} className="rounded-lg border border-[#e9ecef] px-4 py-3 text-base focus:outline-none focus:ring-2 focus:ring-[#3a86ff] bg-[#f9fafb]" />
-          </div>
-          <div className="flex flex-col gap-2">
-            <label htmlFor="category" className="text-sm font-medium text-[#22223b]">Categoria</label>
-            <input id="category" name="category" type="text" required value={form.category} onChange={handleChange} className="rounded-lg border border-[#e9ecef] px-4 py-3 text-base focus:outline-none focus:ring-2 focus:ring-[#3a86ff] bg-[#f9fafb]" />
-          </div>
-          <div className="flex flex-col gap-2 md:col-span-2">
-            <label htmlFor="description" className="text-sm font-medium text-[#22223b]">Descrição</label>
-            <textarea id="description" name="description" required value={form.description} onChange={handleChange} className="rounded-lg border border-[#e9ecef] px-4 py-3 text-base focus:outline-none focus:ring-2 focus:ring-[#3a86ff] bg-[#f9fafb] min-h-[80px]" />
-          </div>
-          <div className="flex flex-col gap-2">
-            <label htmlFor="price" className="text-sm font-medium text-[#22223b]">Preço</label>
-            <input id="price" name="price" type="text" value={form.price} onChange={handleChange} className="rounded-lg border border-[#e9ecef] px-4 py-3 text-base focus:outline-none focus:ring-2 focus:ring-[#3a86ff] bg-[#f9fafb]" />
-          </div>
-          <div className="flex flex-col gap-2">
-            <label htmlFor="photo" className="text-sm font-medium text-[#22223b]">Foto (URL)</label>
-            <input id="photo" name="photo" type="text" value={form.photo} onChange={handleChange} className="rounded-lg border border-[#e9ecef] px-4 py-3 text-base focus:outline-none focus:ring-2 focus:ring-[#3a86ff] bg-[#f9fafb]" />
-          </div>
-          <div className="flex flex-col gap-2">
-            <label htmlFor="address" className="text-sm font-medium text-[#22223b]">Endereço</label>
-            <input id="address" name="address" type="text" value={form.address} onChange={handleChange} className="rounded-lg border border-[#e9ecef] px-4 py-3 text-base focus:outline-none focus:ring-2 focus:ring-[#3a86ff] bg-[#f9fafb]" />
-          </div>
-          <div className="flex flex-col gap-2">
-            <label htmlFor="whatsapp" className="text-sm font-medium text-[#22223b]">WhatsApp</label>
-            <input id="whatsapp" name="whatsapp" type="text" value={form.whatsapp} onChange={handleChange} className="rounded-lg border border-[#e9ecef] px-4 py-3 text-base focus:outline-none focus:ring-2 focus:ring-[#3a86ff] bg-[#f9fafb]" />
-          </div>
-          <div className="flex flex-col gap-2">
-            <label htmlFor="site" className="text-sm font-medium text-[#22223b]">Site</label>
-            <input id="site" name="site" type="text" value={form.site} onChange={handleChange} className="rounded-lg border border-[#e9ecef] px-4 py-3 text-base focus:outline-none focus:ring-2 focus:ring-[#3a86ff] bg-[#f9fafb]" />
-          </div>
+  async function handleSubmit(e: React.FormEvent) {
+    e.preventDefault();
+    
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return;
+
+      const itemData = {
+        tenant_id: user.id,
+        ...formData,
+      };
+
+      if (editingItem) {
+        // Update
+        const { error } = await supabase
+          .from("catalog")
+          .update(itemData)
+          .eq("id", editingItem.id);
+
+        if (error) throw error;
+      } else {
+        // Create
+        const { error } = await supabase
+          .from("catalog")
+          .insert([itemData]);
+
+        if (error) throw error;
+      }
+
+      // Reset form
+      setFormData({
+        title: "",
+        description: "",
+        category: "",
+        price: "",
+        photo: "",
+        address: "",
+        whatsapp: "",
+        site: "",
+      });
+      setShowForm(false);
+      setEditingItem(null);
+      loadItems();
+    } catch (error: any) {
+      alert("Erro: " + error.message);
+    }
+  }
+
+  async function handleDelete(id: string) {
+    if (!confirm("Tem certeza que deseja excluir este item?")) return;
+
+    try {
+      const { error } = await supabase
+        .from("catalog")
+        .delete()
+        .eq("id", id);
+
+      if (error) throw error;
+      loadItems();
+    } catch (error: any) {
+      alert("Erro ao excluir: " + error.message);
+    }
+  }
+
+  function handleEdit(item: CatalogItem) {
+    setEditingItem(item);
+    setFormData({
+      title: item.title,
+      description: item.description,
+      category: item.category,
+      price: item.price || "",
+      photo: item.photo || "",
+      address: item.address || "",
+      whatsapp: item.whatsapp || "",
+      site: item.site || "",
+    });
+    setShowForm(true);
+  }
+
+  function handleCancel() {
+    setFormData({
+      title: "",
+      description: "",
+      category: "",
+      price: "",
+      photo: "",
+      address: "",
+      whatsapp: "",
+      site: "",
+    });
+    setShowForm(false);
+    setEditingItem(null);
+  }
+
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gray-50">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-black mx-auto mb-4"></div>
+          <p className="text-gray-600">Carregando...</p>
         </div>
-        {error && <div className="text-red-600 text-sm text-center">{error}</div>}
-        {success && <div className="text-green-600 text-sm text-center">Catálogo salvo com sucesso!</div>}
-        <button
-          type="submit"
-          disabled={loading}
-          className="mt-2 px-8 py-3 rounded-full bg-gradient-to-r from-[#3a86ff] to-[#00b4d8] text-white text-lg font-bold shadow-lg border-2 border-[#3a86ff] hover:from-[#265d97] hover:to-[#0096c7] hover:scale-105 transition-all duration-200 disabled:opacity-60 disabled:cursor-not-allowed"
-        >
-          {loading ? "Salvando..." : "Salvar"}
-        </button>
-      </form>
+      </div>
+    );
+  }
+
+  return (
+    <div className="min-h-screen bg-gray-50">
+      {/* Header */}
+      <header className="bg-white border-b border-gray-200">
+        <div className="max-w-7xl mx-auto px-6 py-4 flex items-center justify-between">
+          <div className="flex items-center gap-4">
+            <button
+              onClick={() => router.push("/dashboard")}
+              className="text-gray-600 hover:text-gray-900"
+            >
+              ← Voltar
+            </button>
+            <h1 className="text-2xl font-bold text-gray-900">Catálogo</h1>
+          </div>
+          <Button
+            onClick={() => setShowForm(!showForm)}
+            className="bg-yellow-400 hover:bg-yellow-500 text-black"
+          >
+            {showForm ? "Cancelar" : "+ Adicionar Item"}
+          </Button>
+        </div>
+      </header>
+
+      <main className="max-w-7xl mx-auto px-6 py-8">
+        {/* Form */}
+        {showForm && (
+          <div className="bg-white rounded-lg border border-gray-200 p-6 mb-8">
+            <h2 className="text-lg font-bold text-gray-900 mb-4">
+              {editingItem ? "Editar Item" : "Novo Item"}
+            </h2>
+            <form onSubmit={handleSubmit} className="space-y-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Título *
+                  </label>
+                  <input
+                    type="text"
+                    value={formData.title}
+                    onChange={(e) => setFormData({ ...formData, title: e.target.value })}
+                    className="w-full border border-gray-300 rounded-lg px-4 py-2"
+                    required
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Categoria *
+                  </label>
+                  <input
+                    type="text"
+                    value={formData.category}
+                    onChange={(e) => setFormData({ ...formData, category: e.target.value })}
+                    className="w-full border border-gray-300 rounded-lg px-4 py-2"
+                    required
+                  />
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Descrição *
+                </label>
+                <textarea
+                  value={formData.description}
+                  onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+                  className="w-full border border-gray-300 rounded-lg px-4 py-2 h-24"
+                  required
+                />
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Preço
+                  </label>
+                  <input
+                    type="text"
+                    value={formData.price}
+                    onChange={(e) => setFormData({ ...formData, price: e.target.value })}
+                    className="w-full border border-gray-300 rounded-lg px-4 py-2"
+                    placeholder="R$ 0,00"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Foto (URL)
+                  </label>
+                  <input
+                    type="text"
+                    value={formData.photo}
+                    onChange={(e) => setFormData({ ...formData, photo: e.target.value })}
+                    className="w-full border border-gray-300 rounded-lg px-4 py-2"
+                    placeholder="https://..."
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Endereço
+                  </label>
+                  <input
+                    type="text"
+                    value={formData.address}
+                    onChange={(e) => setFormData({ ...formData, address: e.target.value })}
+                    className="w-full border border-gray-300 rounded-lg px-4 py-2"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    WhatsApp
+                  </label>
+                  <input
+                    type="text"
+                    value={formData.whatsapp}
+                    onChange={(e) => setFormData({ ...formData, whatsapp: e.target.value })}
+                    className="w-full border border-gray-300 rounded-lg px-4 py-2"
+                    placeholder="+55 11 99999-9999"
+                  />
+                </div>
+
+                <div className="md:col-span-2">
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Site
+                  </label>
+                  <input
+                    type="text"
+                    value={formData.site}
+                    onChange={(e) => setFormData({ ...formData, site: e.target.value })}
+                    className="w-full border border-gray-300 rounded-lg px-4 py-2"
+                    placeholder="https://..."
+                  />
+                </div>
+              </div>
+
+              <div className="flex gap-3">
+                <Button type="submit" className="bg-black hover:bg-gray-800">
+                  {editingItem ? "Atualizar" : "Criar"}
+                </Button>
+                <Button
+                  type="button"
+                  onClick={handleCancel}
+                  className="bg-gray-200 hover:bg-gray-300 text-black"
+                >
+                  Cancelar
+                </Button>
+              </div>
+            </form>
+          </div>
+        )}
+
+        {/* Items List */}
+        {items.length === 0 ? (
+          <div className="bg-white rounded-lg border border-gray-200 p-12 text-center">
+            <p className="text-gray-600 mb-4">Nenhum item no catálogo ainda.</p>
+            <Button
+              onClick={() => setShowForm(true)}
+              className="bg-yellow-400 hover:bg-yellow-500 text-black"
+            >
+              Adicionar Primeiro Item
+            </Button>
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {items.map((item) => (
+              <div
+                key={item.id}
+                className="bg-white rounded-lg border border-gray-200 p-6 hover:shadow-lg transition"
+              >
+                {item.photo && (
+                  <img
+                    src={item.photo}
+                    alt={item.title}
+                    className="w-full h-48 object-cover rounded-lg mb-4"
+                  />
+                )}
+
+                <div className="flex items-start justify-between mb-3">
+                  <h3 className="font-bold text-gray-900 text-lg">{item.title}</h3>
+                  {item.price && (
+                    <span className="text-sm font-semibold text-gray-900">
+                      {item.price}
+                    </span>
+                  )}
+                </div>
+
+                <p className="text-sm text-gray-600 mb-3 line-clamp-3">
+                  {item.description}
+                </p>
+
+                <div className="flex items-center gap-2 mb-4">
+                  <span className="text-xs bg-gray-100 px-2 py-1 rounded">
+                    {item.category}
+                  </span>
+                  <span className="text-xs text-gray-500">
+                    {new Date(item.created_at).toLocaleDateString("pt-BR")}
+                  </span>
+                </div>
+
+                {(item.address || item.whatsapp || item.site) && (
+                  <div className="text-xs text-gray-600 mb-4 space-y-1">
+                    {item.address && <p>📍 {item.address}</p>}
+                    {item.whatsapp && <p>📱 {item.whatsapp}</p>}
+                    {item.site && <p>🌐 {item.site}</p>}
+                  </div>
+                )}
+
+                <div className="flex gap-2">
+                  <button
+                    onClick={() => handleEdit(item)}
+                    className="flex-1 text-sm py-2 px-3 border border-gray-300 rounded-lg hover:bg-gray-50 transition"
+                  >
+                    Editar
+                  </button>
+                  <button
+                    onClick={() => handleDelete(item.id)}
+                    className="flex-1 text-sm py-2 px-3 border border-red-300 text-red-600 rounded-lg hover:bg-red-50 transition"
+                  >
+                    Excluir
+                  </button>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+      </main>
     </div>
   );
 }
