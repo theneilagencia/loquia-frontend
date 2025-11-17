@@ -3,6 +3,8 @@
 import { useState } from "react";
 import { supabase } from "@/lib/supabaseClient";
 import { useRouter } from "next/navigation";
+import Image from "next/image";
+import Link from "next/link";
 
 export default function LoginPage() {
   const router = useRouter();
@@ -32,7 +34,19 @@ export default function LoginPage() {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-[#f9fafb] px-4">
+    <div className="min-h-screen flex flex-col items-center justify-center bg-[#f9fafb] px-4">
+      {/* Logo */}
+      <Link href="/" className="mb-8">
+        <Image
+          src="/images/logo-black.png"
+          alt="Loquia"
+          width={150}
+          height={40}
+          className="hover:opacity-80 transition-opacity"
+          priority
+        />
+      </Link>
+
       <form
         onSubmit={handleLogin}
         className="bg-white rounded-2xl shadow-lg p-10 w-full max-w-md flex flex-col gap-6 border border-[#e0e0e0]"
