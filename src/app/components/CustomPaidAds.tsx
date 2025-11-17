@@ -20,7 +20,7 @@ export default function CustomPaidAds() {
           <div className="relative z-10">
             <div className="inline-flex items-center gap-2 px-4 py-2 border border-gray-700 rounded-full mb-8">
               <span className="w-2 h-2 bg-yellow-400 rounded-full"></span>
-              <span className="text-sm text-gray-300">Precificação Loquia</span>
+              <span className="text-sm text-gray-300">Mídia programática</span>
             </div>
 
             <h2 className="text-4xl md:text-5xl font-bold mb-6">
