@@ -25,9 +25,25 @@ export default function CustomEra() {
 
   return (
     <section ref={sectionRef} className="relative py-24 px-6 bg-white overflow-hidden">
-      {/* Animated background */}
+      {/* Animated background with modern graphics */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
-        <div className="absolute top-20 right-20 w-96 h-96 bg-gray-50 rounded-full opacity-40 animate-pulse"></div>
+        {/* Gradient meshes */}
+        <div className="absolute top-20 right-20 w-[600px] h-[600px] bg-gradient-to-bl from-gray-200 via-gray-100 to-transparent rounded-full opacity-30 animate-pulse blur-3xl"></div>
+        <div className="absolute bottom-10 left-10 w-96 h-96 bg-gradient-to-tr from-yellow-200 via-yellow-100 to-transparent rounded-full opacity-25 animate-pulse blur-3xl" style={{ animationDelay: '1.5s' }}></div>
+        
+        {/* Floating grid pattern */}
+        <div className="absolute top-1/4 left-1/4 w-32 h-32 border border-gray-200 rounded-lg rotate-45 animate-spin" style={{ animationDuration: '20s' }}></div>
+        <div className="absolute bottom-1/4 right-1/4 w-24 h-24 border-2 border-yellow-200 rounded-lg -rotate-12 animate-bounce" style={{ animationDuration: '5s' }}></div>
+        
+        {/* Dots pattern */}
+        <div className="absolute top-1/3 right-1/3 grid grid-cols-3 gap-4 opacity-20">
+          <div className="w-2 h-2 bg-gray-400 rounded-full animate-pulse"></div>
+          <div className="w-2 h-2 bg-gray-400 rounded-full animate-pulse" style={{ animationDelay: '0.2s' }}></div>
+          <div className="w-2 h-2 bg-gray-400 rounded-full animate-pulse" style={{ animationDelay: '0.4s' }}></div>
+          <div className="w-2 h-2 bg-yellow-400 rounded-full animate-pulse" style={{ animationDelay: '0.6s' }}></div>
+          <div className="w-2 h-2 bg-yellow-400 rounded-full animate-pulse" style={{ animationDelay: '0.8s' }}></div>
+          <div className="w-2 h-2 bg-gray-400 rounded-full animate-pulse" style={{ animationDelay: '1s' }}></div>
+        </div>
       </div>
 
       <div className="relative max-w-6xl mx-auto">
@@ -175,23 +191,7 @@ export default function CustomEra() {
           </div>
         </div>
 
-        {/* The Truth Box */}
-        <div className="p-12 bg-gray-50 border border-gray-200 rounded-2xl mb-12">
-          <p className="text-3xl md:text-5xl font-bold text-black mb-6 leading-tight">
-            A resposta não vem de uma lista de links.<br />
-            Vem de um <span className="text-yellow-600">modelo de IA que entende intenção, contexto e relevância comercial</span>.
-          </p>
-          <p className="text-xl text-gray-700">
-            E recomenda as empresas certas.
-          </p>
-        </div>
 
-        {/* Final statement */}
-        <p className="text-4xl md:text-6xl font-bold leading-tight">
-          <span className="text-black">Se a sua empresa não existe nesse ecossistema,</span>
-          <br />
-          <span className="text-red-600">ela deixa de existir para a nova economia da atenção</span>
-        </p>
       </div>
     </section>
   );

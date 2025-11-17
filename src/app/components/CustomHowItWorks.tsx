@@ -45,9 +45,19 @@ export default function CustomHowItWorks() {
 
   return (
     <section ref={sectionRef} className="relative py-24 px-6 bg-white overflow-hidden">
-      {/* Animated background */}
+      {/* Animated background with modern graphics */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
-        <div className="absolute bottom-20 left-20 w-96 h-96 bg-yellow-50 rounded-full opacity-30 animate-pulse"></div>
+        {/* Gradient waves */}
+        <div className="absolute bottom-20 left-20 w-[500px] h-[500px] bg-gradient-to-tr from-yellow-200 via-yellow-100 to-transparent rounded-full opacity-30 animate-pulse blur-3xl"></div>
+        <div className="absolute top-10 right-10 w-96 h-96 bg-gradient-to-bl from-gray-200 via-gray-100 to-transparent rounded-full opacity-25 animate-pulse blur-3xl" style={{ animationDelay: '2s' }}></div>
+        
+        {/* Animated lines */}
+        <div className="absolute top-1/4 left-0 w-64 h-0.5 bg-gradient-to-r from-transparent via-yellow-300 to-transparent opacity-20 animate-pulse"></div>
+        <div className="absolute bottom-1/4 right-0 w-96 h-0.5 bg-gradient-to-r from-transparent via-gray-300 to-transparent opacity-20 animate-pulse" style={{ animationDelay: '1s' }}></div>
+        
+        {/* Floating squares */}
+        <div className="absolute top-40 right-1/3 w-16 h-16 border border-yellow-300 rounded-md rotate-45 animate-spin" style={{ animationDuration: '15s' }}></div>
+        <div className="absolute bottom-40 left-1/3 w-12 h-12 bg-gray-200 opacity-20 rounded-md -rotate-12 animate-bounce" style={{ animationDuration: '4s' }}></div>
       </div>
 
       <div className="relative max-w-6xl mx-auto">

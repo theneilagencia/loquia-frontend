@@ -12,10 +12,17 @@ export default function CustomHero() {
 
   return (
     <section className="relative min-h-screen flex items-center justify-center px-6 py-32 bg-white overflow-hidden">
-      {/* Animated background circles */}
+      {/* Animated background with modern graphics */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
-        <div className="absolute top-20 left-10 w-64 h-64 bg-gray-100 rounded-full opacity-50 animate-pulse"></div>
-        <div className="absolute bottom-20 right-10 w-96 h-96 bg-yellow-50 rounded-full opacity-30 animate-pulse" style={{ animationDelay: '1s' }}></div>
+        {/* Gradient orbs */}
+        <div className="absolute top-20 left-10 w-96 h-96 bg-gradient-to-br from-yellow-200 via-yellow-100 to-transparent rounded-full opacity-40 animate-pulse blur-3xl"></div>
+        <div className="absolute bottom-20 right-10 w-[500px] h-[500px] bg-gradient-to-br from-gray-200 via-gray-100 to-transparent rounded-full opacity-30 animate-pulse blur-3xl" style={{ animationDelay: '1s' }}></div>
+        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-gradient-to-br from-yellow-100 via-transparent to-gray-100 rounded-full opacity-20 animate-spin" style={{ animationDuration: '30s' }}></div>
+        
+        {/* Floating geometric shapes */}
+        <div className="absolute top-32 right-1/4 w-20 h-20 border-2 border-yellow-300 rounded-lg rotate-12 animate-bounce" style={{ animationDuration: '3s', animationDelay: '0.5s' }}></div>
+        <div className="absolute bottom-32 left-1/4 w-16 h-16 border-2 border-gray-300 rounded-full animate-bounce" style={{ animationDuration: '4s', animationDelay: '1s' }}></div>
+        <div className="absolute top-1/3 right-1/3 w-12 h-12 bg-yellow-200 opacity-30 rounded-full animate-ping" style={{ animationDuration: '2s' }}></div>
       </div>
 
       <div className="relative max-w-5xl mx-auto text-center">
@@ -35,8 +42,7 @@ export default function CustomHero() {
             isVisible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-4"
           }`}
         >
-          A voz da sua marca na{" "}
-          <span className="bg-yellow-400 px-2">era da IA</span>
+          A voz da sua marca na era da IA
         </h1>
 
         {/* Subheadline */}
