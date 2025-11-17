@@ -33,6 +33,7 @@ export default function Dashboard() {
   const [recentIntents, setRecentIntents] = useState<Intent[]>([]);
   const [recentFeeds, setRecentFeeds] = useState<Feed[]>([]);
   const [loading, setLoading] = useState(true);
+  const [optimizing, setOptimizing] = useState(false);
 
   useEffect(() => {
     checkUser();
@@ -87,6 +88,41 @@ export default function Dashboard() {
       console.error("Erro ao carregar dados:", error);
     } finally {
       setLoading(false);
+    }
+  }
+
+  async function optimizeIntents() {
+    setOptimizing(true);
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) return;
+
+      const response = await fetch("/api/workflows/optimize-intents", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${session.access_token}`,
+        },
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        alert(data.error || "Erro ao otimizar intenções");
+        return;
+      }
+
+      alert(data.message);
+      
+      // Recarregar dados após otimização
+      setTimeout(() => {
+        loadDashboardData();
+      }, 2000);
+      
+    } catch (error: any) {
+      alert("Erro: " + error.message);
+    } finally {
+      setOptimizing(false);
     }
   }
 
@@ -190,7 +226,18 @@ export default function Dashboard() {
 
         {/* Quick Actions */}
         <div className="bg-white rounded-lg border border-gray-200 p-6 mb-8">
-          <h2 className="text-lg font-bold text-gray-900 mb-4">Ações Rápidas</h2>
+          <div className="flex items-center justify-between mb-4">
+            <h2 className="text-lg font-bold text-gray-900">Ações Rápidas</h2>
+            {stats.intentCount > 0 && (
+              <button
+                onClick={optimizeIntents}
+                disabled={optimizing}
+                className="px-4 py-2 bg-purple-500 hover:bg-purple-600 text-white text-sm rounded-lg transition disabled:opacity-50"
+              >
+                {optimizing ? "⚡ Otimizando..." : "⚡ Otimizar Intenções"}
+              </button>
+            )}
+          </div>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <button
               onClick={() => router.push("/catalog")}
