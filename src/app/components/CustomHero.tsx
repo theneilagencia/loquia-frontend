@@ -38,7 +38,7 @@ export default function CustomHero() {
 
         {/* Headline */}
         <h1
-          className={`text-5xl md:text-7xl font-bold text-black mb-6 leading-tight tracking-tight transition-all duration-700 delay-100 ${
+          className={`text-6xl md:text-8xl font-bold text-black mb-6 leading-tight tracking-tight transition-all duration-700 delay-100 ${
             isVisible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-4"
           }`}
         >
