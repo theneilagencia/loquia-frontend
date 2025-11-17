@@ -37,7 +37,16 @@ export default function LoginPage() {
       }
 
       console.log("✅ Login successful!", data.user?.email);
-      router.push("/dashboard");
+      
+      // Save tokens to cookies for middleware
+      if (data.session) {
+        document.cookie = `sb-access-token=${data.session.access_token}; path=/; max-age=3600`;
+        document.cookie = `sb-refresh-token=${data.session.refresh_token}; path=/; max-age=604800`;
+        console.log("🍪 Cookies saved!");
+      }
+      
+      // Force reload to ensure middleware picks up the cookies
+      window.location.href = "/dashboard";
     } catch (err) {
       console.error("❌ Unexpected error:", err);
       setError("Erro inesperado ao fazer login");
