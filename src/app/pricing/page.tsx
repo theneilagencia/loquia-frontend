@@ -67,6 +67,40 @@ export default function PricingPage() {
   return (
     <div className="min-h-screen bg-white py-12 px-4">
       <div className="max-w-7xl mx-auto">
+        {/* Intent Proof Dashboard Section */}
+        <div className="mb-20">
+          <div className="text-center mb-12">
+            <div className="inline-block bg-gray-100 px-4 py-2 rounded-full mb-6">
+              <span className="text-sm font-semibold text-gray-700">● INTENT PROOF DASHBOARD™</span>
+            </div>
+            <h2 className="text-5xl md:text-6xl font-bold text-gray-900 mb-6 leading-tight">
+              Não adianta prometer,<br />é preciso mostrar
+            </h2>
+            <p className="text-xl text-gray-700 max-w-4xl mx-auto mb-4 font-medium">
+              O Intent Proof Dashboard™ entrega transparência total e<br />prova real de que sua empresa está sendo usada pelas IAs
+            </p>
+            <p className="text-lg text-gray-600 max-w-4xl mx-auto mb-12">
+              Acompanhe em tempo real como as IAs veem, consultam e recomendam sua empresa com métricas detalhadas, logs de intenção, provas técnicas, visualização do feed e analytics completos de consultas, ativações e leads
+            </p>
+            
+            {/* AI Logos */}
+            <div className="flex items-center justify-center gap-8 md:gap-12 flex-wrap">
+              <div className="flex items-center gap-3 opacity-80 hover:opacity-100 transition-opacity duration-300">
+                <img src="/images/ai-logos/chatgpt.png" alt="ChatGPT" className="h-8 w-auto" />
+              </div>
+              <div className="flex items-center gap-3 opacity-80 hover:opacity-100 transition-opacity duration-300">
+                <img src="/images/ai-logos/gemini.png" alt="Gemini" className="h-8 w-auto" />
+              </div>
+              <div className="flex items-center gap-3 opacity-80 hover:opacity-100 transition-opacity duration-300">
+                <img src="/images/ai-logos/claude.png" alt="Claude" className="h-8 w-auto" />
+              </div>
+              <div className="flex items-center gap-3 opacity-80 hover:opacity-100 transition-opacity duration-300">
+                <img src="/images/ai-logos/perplexity.png" alt="Perplexity" className="h-8 w-auto" />
+              </div>
+            </div>
+          </div>
+        </div>
+
         {/* Header */}
         <div className="text-center mb-12">
           <h1 className="text-4xl font-bold text-gray-900 mb-4">
