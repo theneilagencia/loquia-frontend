@@ -19,7 +19,7 @@ export default function FeedsPage() {
   const { showSuccess, showError, showInfo } = useToast();
   const [feeds, setFeeds] = useState<Feed[]>([]);
   const [loading, setLoading] = useState(true);
-  const [generating, setGenerating] = useState(false);
+  const [generating, setGenerating] = useState<{[key: string]: boolean}>({});
   const [selectedFeed, setSelectedFeed] = useState<Feed | null>(null);
   const [filterType, setFilterType] = useState<string>("all");
 
@@ -51,34 +51,35 @@ export default function FeedsPage() {
     }
   }
 
-  async function generateFeeds() {
-    setGenerating(true);
+  async function generateFeed(platform: 'openai' | 'perplexity' | 'claude' | 'sge') {
+    setGenerating(prev => ({ ...prev, [platform]: true }));
     try {
       const { data: { session } } = await supabase.auth.getSession();
       if (!session) return;
 
-      const response = await fetch("/api/workflows/generate-feeds", {
+      const endpoint = platform === 'claude' 
+        ? '/api/workflows/generate-feeds-claude'
+        : platform === 'sge'
+        ? '/api/workflows/generate-feeds-sge'
+        : '/api/workflows/generate-feeds';
+
+      const response = await fetch(endpoint, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
           "Authorization": `Bearer ${session.access_token}`,
         },
+        body: JSON.stringify({ platform }),
       });
 
       const data = await response.json();
 
       if (!response.ok) {
-        showError(data.error || "Erro ao gerar feeds");
-        if (data.error?.includes("intenções")) {
-          setTimeout(() => router.push("/intent"), 2000);
-        }
+        showError(data.error || `Erro ao gerar feed para ${platform}`);
         return;
       }
 
-      showSuccess(data.message);
-      if (data.note) {
-        showInfo(data.note);
-      }
+      showSuccess(`Feed para ${platform.toUpperCase()} gerado com sucesso!`);
       
       // Recarregar feeds após alguns segundos
       setTimeout(() => {
@@ -88,7 +89,7 @@ export default function FeedsPage() {
     } catch (error: any) {
       showError("Erro: " + error.message);
     } finally {
-      setGenerating(false);
+      setGenerating(prev => ({ ...prev, [platform]: false }));
     }
   }
 
@@ -139,162 +140,182 @@ export default function FeedsPage() {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      {/* Header */}
-      <header className="bg-white border-b border-gray-200">
-        <div className="max-w-7xl mx-auto px-6 py-4 flex items-center justify-between">
-          <div className="flex items-center gap-4">
-            <button
-              onClick={() => router.push("/dashboard")}
-              className="text-gray-600 hover:text-gray-900"
-            >
-              ← Voltar
-            </button>
-            <h1 className="text-2xl font-bold text-gray-900">Feeds</h1>
-          </div>
-          <Button
-            onClick={generateFeeds}
-            disabled={generating}
-            className="bg-yellow-400 hover:bg-yellow-500 text-black disabled:opacity-50"
-          >
-            {generating ? "Gerando..." : "🤖 Gerar Feeds"}
-          </Button>
-        </div>
-      </header>
-
+      {/* Main Content */}
       <main className="max-w-7xl mx-auto px-6 py-8">
-        {/* Info Box */}
-        <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-8">
-          <p className="text-sm text-blue-900">
-            <strong>Como funciona:</strong> Os feeds são gerados a partir das suas intenções e otimizados para OpenAI e Perplexity. 
-            Eles permitem que IAs descubram e recomendem seus produtos/serviços.
-          </p>
+        {/* Header */}
+        <div className="flex items-center justify-between mb-8">
+          <div>
+            <h1 className="text-3xl font-bold text-gray-900 mb-2">Feeds Gerados</h1>
+            <p className="text-gray-600">
+              Gere feeds otimizados para cada plataforma de IA
+            </p>
+          </div>
         </div>
 
-        {/* Filter Tabs */}
-        {feeds.length > 0 && (
-          <div className="flex gap-2 mb-6">
-            <button
-              onClick={() => setFilterType("all")}
-              className={`px-4 py-2 rounded-lg text-sm font-medium transition ${
-                filterType === "all"
-                  ? "bg-black text-white"
-                  : "bg-white text-gray-600 border border-gray-300 hover:bg-gray-50"
-              }`}
-            >
-              Todos ({feeds.length})
-            </button>
-            <button
-              onClick={() => setFilterType("openai")}
-              className={`px-4 py-2 rounded-lg text-sm font-medium transition ${
-                filterType === "openai"
-                  ? "bg-black text-white"
-                  : "bg-white text-gray-600 border border-gray-300 hover:bg-gray-50"
-              }`}
-            >
-              OpenAI ({feeds.filter(f => f.feed_type === "openai").length})
-            </button>
-            <button
-              onClick={() => setFilterType("perplexity")}
-              className={`px-4 py-2 rounded-lg text-sm font-medium transition ${
-                filterType === "perplexity"
-                  ? "bg-black text-white"
-                  : "bg-white text-gray-600 border border-gray-300 hover:bg-gray-50"
-              }`}
-            >
-              Perplexity ({feeds.filter(f => f.feed_type === "perplexity").length})
-            </button>
-          </div>
-        )}
-
-        {/* Feeds List */}
-        {filteredFeeds.length === 0 ? (
-          <div className="bg-white rounded-lg border border-gray-200 p-12 text-center">
-            <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
-              <svg className="w-8 h-8 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-              </svg>
-            </div>
-            <p className="text-gray-600 mb-4">
-              {filterType === "all" 
-                ? "Nenhum feed gerado ainda." 
-                : `Nenhum feed ${filterType} encontrado.`}
-            </p>
-            <p className="text-sm text-gray-500 mb-6">
-              Clique no botão acima para gerar feeds automaticamente a partir das suas intenções.
-            </p>
+        {/* Botões de Geração */}
+        <div className="bg-white rounded-lg border border-gray-200 p-6 mb-8">
+          <h2 className="text-lg font-semibold text-gray-900 mb-4">Gerar Novos Feeds</h2>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
             <Button
-              onClick={generateFeeds}
-              disabled={generating}
-              className="bg-yellow-400 hover:bg-yellow-500 text-black"
+              onClick={() => generateFeed('openai')}
+              disabled={generating.openai}
+              className="w-full"
             >
-              {generating ? "Gerando..." : "Gerar Primeiro Feed"}
+              {generating.openai ? "Gerando..." : "🤖 OpenAI"}
+            </Button>
+            <Button
+              onClick={() => generateFeed('perplexity')}
+              disabled={generating.perplexity}
+              className="w-full"
+            >
+              {generating.perplexity ? "Gerando..." : "🔮 Perplexity"}
+            </Button>
+            <Button
+              onClick={() => generateFeed('claude')}
+              disabled={generating.claude}
+              className="w-full bg-purple-600 hover:bg-purple-700"
+            >
+              {generating.claude ? "Gerando..." : "🧠 Claude"}
+            </Button>
+            <Button
+              onClick={() => generateFeed('sge')}
+              disabled={generating.sge}
+              className="w-full bg-blue-600 hover:bg-blue-700"
+            >
+              {generating.sge ? "Gerando..." : "⚡ SGE"}
             </Button>
           </div>
+        </div>
+
+        {/* Filtros */}
+        <div className="mb-6 flex gap-2">
+          <button
+            onClick={() => setFilterType("all")}
+            className={`px-4 py-2 rounded-lg ${
+              filterType === "all"
+                ? "bg-black text-white"
+                : "bg-white text-gray-700 border border-gray-300"
+            }`}
+          >
+            Todos ({feeds.length})
+          </button>
+          <button
+            onClick={() => setFilterType("openai")}
+            className={`px-4 py-2 rounded-lg ${
+              filterType === "openai"
+                ? "bg-black text-white"
+                : "bg-white text-gray-700 border border-gray-300"
+            }`}
+          >
+            OpenAI ({feeds.filter(f => f.feed_type === "openai").length})
+          </button>
+          <button
+            onClick={() => setFilterType("perplexity")}
+            className={`px-4 py-2 rounded-lg ${
+              filterType === "perplexity"
+                ? "bg-black text-white"
+                : "bg-white text-gray-700 border border-gray-300"
+            }`}
+          >
+            Perplexity ({feeds.filter(f => f.feed_type === "perplexity").length})
+          </button>
+          <button
+            onClick={() => setFilterType("claude")}
+            className={`px-4 py-2 rounded-lg ${
+              filterType === "claude"
+                ? "bg-purple-600 text-white"
+                : "bg-white text-gray-700 border border-gray-300"
+            }`}
+          >
+            Claude ({feeds.filter(f => f.feed_type === "claude").length})
+          </button>
+          <button
+            onClick={() => setFilterType("sge")}
+            className={`px-4 py-2 rounded-lg ${
+              filterType === "sge"
+                ? "bg-blue-600 text-white"
+                : "bg-white text-gray-700 border border-gray-300"
+            }`}
+          >
+            SGE ({feeds.filter(f => f.feed_type === "sge").length})
+          </button>
+        </div>
+
+        {/* Lista de Feeds */}
+        {filteredFeeds.length === 0 ? (
+          <div className="bg-white rounded-lg border border-gray-200 p-12 text-center">
+            <p className="text-gray-600 mb-4">Nenhum feed gerado ainda.</p>
+            <p className="text-sm text-gray-500">
+              Clique em um dos botões acima para gerar feeds otimizados para cada plataforma.
+            </p>
+          </div>
         ) : (
-          <div className="space-y-4">
+          <div className="grid grid-cols-1 gap-6">
             {filteredFeeds.map((feed) => (
-              <div
-                key={feed.id}
-                className="bg-white rounded-lg border border-gray-200 p-6 hover:shadow-lg transition"
-              >
+              <div key={feed.id} className="bg-white rounded-lg border border-gray-200 p-6">
                 <div className="flex items-start justify-between mb-4">
-                  <div className="flex-1">
-                    <div className="flex items-center gap-3 mb-2">
-                      <h3 className="font-bold text-gray-900 text-lg capitalize">
-                        Feed {feed.feed_type}
-                      </h3>
-                      <span className={`text-xs px-3 py-1 rounded-full font-medium ${
-                        feed.feed_type === "openai" 
-                          ? "bg-green-100 text-green-700"
-                          : "bg-blue-100 text-blue-700"
-                      }`}>
-                        {feed.feed_type}
-                      </span>
-                    </div>
-                    <p className="text-xs text-gray-500">
-                      Criado em {new Date(feed.created_at).toLocaleDateString("pt-BR")} às{" "}
-                      {new Date(feed.created_at).toLocaleTimeString("pt-BR")}
+                  <div>
+                    <h3 className="text-lg font-semibold text-gray-900 capitalize">
+                      {feed.feed_type} Feed
+                    </h3>
+                    <p className="text-sm text-gray-500">
+                      {new Date(feed.created_at).toLocaleString("pt-BR")}
                     </p>
                   </div>
                   <div className="flex gap-2">
-                    <button
+                    <Button
+                      onClick={() => setSelectedFeed(feed)}
+                      variant="ghost"
+                      size="sm"
+                    >
+                      Ver
+                    </Button>
+                    <Button
                       onClick={() => downloadFeed(feed)}
-                      className="text-sm py-2 px-4 border border-gray-300 rounded-lg hover:bg-gray-50 transition"
+                      variant="ghost"
+                      size="sm"
                     >
-                      📥 Baixar
-                    </button>
-                    <button
-                      onClick={() => setSelectedFeed(selectedFeed?.id === feed.id ? null : feed)}
-                      className="text-sm py-2 px-4 border border-gray-300 rounded-lg hover:bg-gray-50 transition"
-                    >
-                      {selectedFeed?.id === feed.id ? "Ocultar" : "Ver JSON"}
-                    </button>
-                    <button
+                      Baixar
+                    </Button>
+                    <Button
                       onClick={() => deleteFeed(feed.id)}
-                      className="text-sm py-2 px-4 border border-red-300 text-red-600 rounded-lg hover:bg-red-50 transition"
+                      variant="ghost"
+                      size="sm"
+                      className="text-red-600 hover:text-red-700"
                     >
                       Excluir
-                    </button>
+                    </Button>
                   </div>
                 </div>
-
-                {/* Feed Preview */}
-                <div className="bg-gray-50 rounded-lg p-4 mb-4">
-                  <p className="text-sm text-gray-700">
-                    <strong>Conteúdo:</strong> {JSON.stringify(feed.feed_content).length} caracteres
-                  </p>
-                </div>
-
-                {/* Expanded JSON */}
-                {selectedFeed?.id === feed.id && (
-                  <div className="mt-4 pt-4 border-t border-gray-200">
-                    <pre className="bg-gray-900 text-gray-100 p-4 rounded-lg overflow-x-auto text-xs">
-                      {JSON.stringify(feed.feed_content, null, 2)}
-                    </pre>
-                  </div>
-                )}
+                <pre className="bg-gray-50 p-4 rounded-lg text-xs overflow-x-auto max-h-40">
+                  {JSON.stringify(feed.feed_content, null, 2)}
+                </pre>
               </div>
             ))}
+          </div>
+        )}
+
+        {/* Modal de Visualização */}
+        {selectedFeed && (
+          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+            <div className="bg-white rounded-lg max-w-4xl w-full max-h-[90vh] overflow-hidden">
+              <div className="p-6 border-b border-gray-200 flex items-center justify-between">
+                <h2 className="text-xl font-bold text-gray-900 capitalize">
+                  {selectedFeed.feed_type} Feed
+                </h2>
+                <button
+                  onClick={() => setSelectedFeed(null)}
+                  className="text-gray-500 hover:text-gray-700"
+                >
+                  ✕
+                </button>
+              </div>
+              <div className="p-6 overflow-y-auto max-h-[calc(90vh-120px)]">
+                <pre className="text-sm">
+                  {JSON.stringify(selectedFeed.feed_content, null, 2)}
+                </pre>
+              </div>
+            </div>
           </div>
         )}
       </main>
