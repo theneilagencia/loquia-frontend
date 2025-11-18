@@ -215,9 +215,6 @@ async function upsertSubscription(
   }
 }
 
-// Configurar para aceitar raw body
-export const config = {
-  api: {
-    bodyParser: false,
-  },
-};
+// Configurar para aceitar raw body (Next.js App Router)
+export const runtime = 'nodejs';
+export const dynamic = 'force-dynamic';
