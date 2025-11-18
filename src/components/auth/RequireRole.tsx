@@ -1,8 +1,10 @@
 'use client';
 
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { useAuth, UserRole } from '@/hooks/useAuth';
+import { supabase } from '@/lib/supabase';
+
+export type UserRole = 'user' | 'admin' | 'superadmin';
 
 interface RequireRoleProps {
   children: React.ReactNode;
@@ -16,34 +18,53 @@ export default function RequireRole({
   fallbackUrl = '/dashboard' 
 }: RequireRoleProps) {
   const router = useRouter();
-  const { profile, loading, isAuthenticated } = useAuth();
+  const [loading, setLoading] = useState(true);
+  const [hasPermission, setHasPermission] = useState(false);
 
   useEffect(() => {
-    if (loading) return;
+    checkPermissions();
+  }, []);
 
-    // Se não estiver autenticado, redirecionar para login
-    if (!isAuthenticated) {
+  async function checkPermissions() {
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      
+      // Se não estiver autenticado, redirecionar para login
+      if (!user) {
+        router.push('/login');
+        return;
+      }
+
+      // Verificar role por email (temporário até RLS ser corrigido)
+      const requiredRoles = Array.isArray(role) ? role : [role];
+      const adminEmails = ['admin@loquia.com'];
+      
+      let userRole: UserRole = 'user';
+      if (user.email && adminEmails.includes(user.email)) {
+        userRole = 'superadmin';
+      }
+
+      const hasRequiredRole = requiredRoles.includes(userRole);
+
+      if (!hasRequiredRole) {
+        console.warn(`Access denied: User has role "${userRole}", but requires one of: ${requiredRoles.join(', ')}`);
+        router.push(fallbackUrl);
+        return;
+      }
+
+      setHasPermission(true);
+    } catch (error) {
+      console.error('Error checking permissions:', error);
       router.push('/login');
-      return;
+    } finally {
+      setLoading(false);
     }
-
-    // Se não tiver perfil carregado, aguardar
-    if (!profile) return;
-
-    // Verificar se o usuário tem o role necessário
-    const requiredRoles = Array.isArray(role) ? role : [role];
-    const hasRequiredRole = requiredRoles.includes(profile.role);
-
-    if (!hasRequiredRole) {
-      console.warn(`⚠️ Access denied: User has role "${profile.role}", but requires one of: ${requiredRoles.join(', ')}`);
-      router.push(fallbackUrl);
-    }
-  }, [loading, isAuthenticated, profile, role, router, fallbackUrl]);
+  }
 
   // Mostrar loading enquanto verifica autenticação
   if (loading) {
     return (
-      <div className="flex items-center justify-center min-h-screen">
+      <div className="flex items-center justify-center min-h-screen bg-gray-50">
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-yellow-500 mx-auto"></div>
           <p className="mt-4 text-gray-600">Verificando permissões...</p>
@@ -52,15 +73,8 @@ export default function RequireRole({
     );
   }
 
-  // Não mostrar nada se não estiver autenticado ou não tiver role correto
-  if (!isAuthenticated || !profile) {
-    return null;
-  }
-
-  const requiredRoles = Array.isArray(role) ? role : [role];
-  const hasRequiredRole = requiredRoles.includes(profile.role);
-
-  if (!hasRequiredRole) {
+  // Não mostrar nada se não tiver permissão
+  if (!hasPermission) {
     return null;
   }
 

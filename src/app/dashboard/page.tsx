@@ -182,9 +182,9 @@ export default function Dashboard() {
             {isSuperAdmin && (
               <Button 
                 onClick={() => router.push("/admin")} 
-                className="bg-purple-600 hover:bg-purple-700 text-white"
+                className="bg-yellow-400 hover:bg-yellow-500 text-black font-bold border-2 border-black"
               >
-                🔧 Admin
+                ADMIN
               </Button>
             )}
             <Button onClick={logout} className="bg-gray-900 hover:bg-gray-800">
