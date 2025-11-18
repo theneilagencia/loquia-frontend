@@ -3,21 +3,26 @@
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import RequireRole from '@/components/auth/RequireRole';
-import { listUsers, toggleUserStatus, changeUserRole } from '@/lib/admin/users';
+import { listUsers, toggleUserStatus, changeUserRole, deleteUser, assignPlanToUser } from '@/lib/admin/users';
+import { listPlans } from '@/lib/admin/plans';
 import { UserRole } from '@/hooks/useAuth';
 import { useToast } from '@/app/contexts/ToastContext';
+import { supabase } from '@/lib/supabase';
 
 interface User {
   id: string;
   email: string;
   full_name?: string;
   role: UserRole;
+  plan_id?: string;
   is_active: boolean;
   created_at: string;
-  plans?: {
-    name: string;
-    price: number;
-  };
+}
+
+interface Plan {
+  id: string;
+  name: string;
+  price: number;
 }
 
 export default function UsersPage() {
@@ -31,19 +36,24 @@ export default function UsersPage() {
 function UsersManagement() {
   const { showSuccess, showError } = useToast();
   const [users, setUsers] = useState<User[]>([]);
+  const [plans, setPlans] = useState<Plan[]>([]);
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState<'all' | 'active' | 'inactive'>('all');
 
   useEffect(() => {
-    loadUsers();
+    loadData();
   }, []);
 
-  async function loadUsers() {
+  async function loadData() {
     try {
-      const data = await listUsers();
-      setUsers(data as User[]);
+      const [usersData, plansData] = await Promise.all([
+        listUsers(),
+        listPlans()
+      ]);
+      setUsers(usersData as User[]);
+      setPlans(plansData as Plan[]);
     } catch (error) {
-      showError('Erro ao carregar usuários');
+      showError('Erro ao carregar dados');
     } finally {
       setLoading(false);
     }
@@ -53,7 +63,7 @@ function UsersManagement() {
     try {
       await toggleUserStatus(userId, !currentStatus);
       showSuccess(`Usuário ${!currentStatus ? 'ativado' : 'desativado'} com sucesso`);
-      await loadUsers();
+      await loadData();
     } catch (error) {
       showError('Erro ao alterar status do usuário');
     }
@@ -63,9 +73,47 @@ function UsersManagement() {
     try {
       await changeUserRole(userId, newRole);
       showSuccess('Role alterado com sucesso');
-      await loadUsers();
+      await loadData();
     } catch (error) {
       showError('Erro ao alterar role do usuário');
+    }
+  }
+
+  async function handleChangePlan(userId: string, planId: string) {
+    try {
+      await assignPlanToUser(userId, planId);
+      showSuccess('Plano atribuído com sucesso');
+      await loadData();
+    } catch (error) {
+      showError('Erro ao atribuir plano');
+    }
+  }
+
+  async function handleResetPassword(email: string) {
+    try {
+      const { error } = await supabase.auth.resetPasswordForEmail(email, {
+        redirectTo: `${window.location.origin}/reset-password`,
+      });
+      
+      if (error) throw error;
+      
+      showSuccess(`Email de reset de senha enviado para ${email}`);
+    } catch (error) {
+      showError('Erro ao enviar email de reset');
+    }
+  }
+
+  async function handleDeleteUser(userId: string, email: string) {
+    if (!confirm(`Tem certeza que deseja excluir o usuário ${email}?`)) {
+      return;
+    }
+
+    try {
+      await deleteUser(userId);
+      showSuccess('Usuário excluído com sucesso');
+      await loadData();
+    } catch (error) {
+      showError('Erro ao excluir usuário');
     }
   }
 
@@ -137,7 +185,7 @@ function UsersManagement() {
         </div>
 
         {/* Users Table */}
-        <div className="bg-white rounded-lg shadow overflow-hidden">
+        <div className="bg-white rounded-lg shadow overflow-x-auto">
           <table className="min-w-full divide-y divide-gray-200">
             <thead className="bg-gray-50">
               <tr>
@@ -174,15 +222,26 @@ function UsersManagement() {
                     <select
                       value={user.role}
                       onChange={(e) => handleChangeRole(user.id, e.target.value as UserRole)}
-                      className="border border-gray-300 rounded px-2 py-1"
+                      className="border border-gray-300 rounded px-2 py-1 text-sm"
                     >
                       <option value="user">User</option>
                       <option value="admin">Admin</option>
                       <option value="superadmin">Superadmin</option>
                     </select>
                   </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                    {user.plans?.name || 'Sem plano'}
+                  <td className="px-6 py-4 whitespace-nowrap text-sm">
+                    <select
+                      value={user.plan_id || ''}
+                      onChange={(e) => handleChangePlan(user.id, e.target.value)}
+                      className="border border-gray-300 rounded px-2 py-1 text-sm"
+                    >
+                      <option value="">Sem plano</option>
+                      {plans.map((plan) => (
+                        <option key={plan.id} value={plan.id}>
+                          {plan.name} - R$ {plan.price}
+                        </option>
+                      ))}
+                    </select>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
                     <span
@@ -195,18 +254,39 @@ function UsersManagement() {
                       {user.is_active ? 'Ativo' : 'Inativo'}
                     </span>
                   </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm">
+                  <td className="px-6 py-4 whitespace-nowrap text-sm space-x-2">
                     <button
                       onClick={() => handleToggleStatus(user.id, user.is_active)}
-                      className="text-yellow-600 hover:text-yellow-900"
+                      className="text-blue-600 hover:text-blue-900"
+                      title={user.is_active ? 'Desativar' : 'Ativar'}
                     >
                       {user.is_active ? 'Desativar' : 'Ativar'}
+                    </button>
+                    <button
+                      onClick={() => handleResetPassword(user.email)}
+                      className="text-yellow-600 hover:text-yellow-900"
+                      title="Resetar senha"
+                    >
+                      Reset Senha
+                    </button>
+                    <button
+                      onClick={() => handleDeleteUser(user.id, user.email)}
+                      className="text-red-600 hover:text-red-900"
+                      title="Excluir usuário"
+                    >
+                      Excluir
                     </button>
                   </td>
                 </tr>
               ))}
             </tbody>
           </table>
+          
+          {filteredUsers.length === 0 && (
+            <div className="text-center py-8 text-gray-500">
+              Nenhum usuário encontrado
+            </div>
+          )}
         </div>
       </main>
     </div>
