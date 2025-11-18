@@ -67,19 +67,10 @@ export default function Dashboard() {
     }
     setUser(user);
     
-    // Verificar se é superadmin
-    try {
-      const { data: profile } = await supabase
-        .from('user_profiles')
-        .select('role')
-        .eq('id', user.id)
-        .single();
-      
-      if (profile?.role === 'superadmin') {
-        setIsSuperAdmin(true);
-      }
-    } catch (error) {
-      console.log('Não foi possível verificar role:', error);
+    // Verificar se é superadmin (por email)
+    const adminEmails = ['admin@loquia.com'];
+    if (user.email && adminEmails.includes(user.email)) {
+      setIsSuperAdmin(true);
     }
   }
 
