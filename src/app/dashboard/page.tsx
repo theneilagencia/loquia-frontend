@@ -6,7 +6,7 @@ import { useRouter } from "next/navigation";
 import Button from "../components/ui/Button";
 import { useToast } from "../contexts/ToastContext";
 import Onboarding from "../components/ui/Onboarding";
-import { useAuth } from "@/hooks/useAuth";
+
 
 interface Stats {
   catalogCount: number;
@@ -32,7 +32,6 @@ interface Feed {
 export default function Dashboard() {
   const router = useRouter();
   const { showSuccess, showError } = useToast();
-  const { isSuperAdmin } = useAuth();
   const [user, setUser] = useState<any>(null);
   const [stats, setStats] = useState<Stats>({ catalogCount: 0, intentCount: 0, feedCount: 0 });
   const [recentIntents, setRecentIntents] = useState<Intent[]>([]);
@@ -40,6 +39,7 @@ export default function Dashboard() {
   const [loading, setLoading] = useState(true);
   const [optimizing, setOptimizing] = useState(false);
   const [showOnboarding, setShowOnboarding] = useState(false);
+  const [isSuperAdmin, setIsSuperAdmin] = useState(false);
 
   useEffect(() => {
     checkUser();
@@ -66,6 +66,21 @@ export default function Dashboard() {
       return;
     }
     setUser(user);
+    
+    // Verificar se é superadmin
+    try {
+      const { data: profile } = await supabase
+        .from('user_profiles')
+        .select('role')
+        .eq('id', user.id)
+        .single();
+      
+      if (profile?.role === 'superadmin') {
+        setIsSuperAdmin(true);
+      }
+    } catch (error) {
+      console.log('Não foi possível verificar role:', error);
+    }
   }
 
   async function loadDashboardData() {
