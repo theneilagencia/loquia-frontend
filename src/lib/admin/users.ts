@@ -22,14 +22,7 @@ export interface UpdateUserData {
 export async function listUsers() {
   const { data, error } = await supabase
     .from('user_profiles')
-    .select(`
-      *,
-      plans:plan_id (
-        id,
-        name,
-        price
-      )
-    `)
+    .select('*')
     .order('created_at', { ascending: false });
 
   if (error) {
@@ -46,15 +39,7 @@ export async function listUsers() {
 export async function getUserById(userId: string) {
   const { data, error } = await supabase
     .from('user_profiles')
-    .select(`
-      *,
-      plans:plan_id (
-        id,
-        name,
-        price,
-        billing_period
-      )
-    `)
+    .select('*')
     .eq('id', userId)
     .single();
 
@@ -181,14 +166,7 @@ export async function assignPlanToUser(userId: string, planId: string) {
 export async function getUserPlanHistory(userId: string) {
   const { data, error } = await supabase
     .from('user_plan_history')
-    .select(`
-      *,
-      plans:plan_id (
-        id,
-        name,
-        price
-      )
-    `)
+    .select('*')
     .eq('user_id', userId)
     .order('started_at', { ascending: false });
 
