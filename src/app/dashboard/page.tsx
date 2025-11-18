@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation";
 import Button from "../components/ui/Button";
 import { useToast } from "../contexts/ToastContext";
 import Onboarding from "../components/ui/Onboarding";
+import { useAuth } from "@/hooks/useAuth";
 
 interface Stats {
   catalogCount: number;
@@ -31,6 +32,7 @@ interface Feed {
 export default function Dashboard() {
   const router = useRouter();
   const { showSuccess, showError } = useToast();
+  const { isSuperAdmin } = useAuth();
   const [user, setUser] = useState<any>(null);
   const [stats, setStats] = useState<Stats>({ catalogCount: 0, intentCount: 0, feedCount: 0 });
   const [recentIntents, setRecentIntents] = useState<Intent[]>([]);
@@ -171,6 +173,14 @@ export default function Dashboard() {
           </div>
           <div className="flex items-center gap-4">
             <span className="text-sm text-gray-600">{user?.email}</span>
+            {isSuperAdmin && (
+              <Button 
+                onClick={() => router.push("/admin")} 
+                className="bg-purple-600 hover:bg-purple-700 text-white"
+              >
+                🔧 Admin
+              </Button>
+            )}
             <Button onClick={logout} className="bg-gray-900 hover:bg-gray-800">
               Sair
             </Button>
