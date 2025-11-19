@@ -1,6 +1,15 @@
 "use client";
 
+import { useRouter } from "next/navigation";
+
 export default function CustomPlans() {
+  const router = useRouter();
+
+  const handlePlanClick = (plan: string) => {
+    // Redireciona para login com redirect para pricing
+    router.push(`/login?redirect=/pricing&plan=${plan}&billing=monthly`);
+  };
+
   return (
     <section id="planos" className="relative py-24 px-6 bg-white overflow-hidden">
       {/* Animated background with modern graphics */}
@@ -72,7 +81,10 @@ export default function CustomPlans() {
               </li>
             </ul>
 
-            <button className="w-full px-6 py-3 bg-white text-black font-semibold rounded-lg border-2 border-black hover:bg-black hover:text-white transition-all duration-200">
+            <button 
+              onClick={() => handlePlanClick('basic')}
+              className="w-full px-6 py-3 bg-white text-black font-semibold rounded-lg border-2 border-black hover:bg-black hover:text-white transition-all duration-200"
+            >
               Começar com Basic
             </button>
           </div>
@@ -118,7 +130,10 @@ export default function CustomPlans() {
               </li>
             </ul>
 
-            <button className="w-full px-6 py-3 bg-black text-white font-semibold rounded-lg hover:bg-gray-900 transition-all duration-200 shadow-lg">
+            <button 
+              onClick={() => handlePlanClick('pro')}
+              className="w-full px-6 py-3 bg-black text-white font-semibold rounded-lg hover:bg-gray-900 transition-all duration-200 shadow-lg"
+            >
               Começar com Pro
             </button>
           </div>
@@ -164,7 +179,10 @@ export default function CustomPlans() {
               </li>
             </ul>
 
-            <button className="w-full px-6 py-3 bg-white text-black font-semibold rounded-lg border-2 border-black hover:bg-black hover:text-white transition-all duration-200">
+            <button 
+              onClick={() => handlePlanClick('enterprise')}
+              className="w-full px-6 py-3 bg-white text-black font-semibold rounded-lg border-2 border-black hover:bg-black hover:text-white transition-all duration-200"
+            >
               Começar com Enterprise
             </button>
           </div>
