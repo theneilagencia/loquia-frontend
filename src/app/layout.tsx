@@ -5,7 +5,7 @@ import { usePathname } from "next/navigation";
 import { ToastProvider } from "./contexts/ToastContext";
 import PublicHeader from "./components/ui/PublicHeader";
 import PrivateHeader from "./components/ui/PrivateHeader";
-import Footer from "./components/ui/Footer";
+import Footer from "./components/Footer";
 import Onboarding from "./components/ui/Onboarding";
 import { useEffect, useState } from "react";
 import { supabase } from "@/lib/supabase";
@@ -89,6 +89,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
                 />
               )}
               {children}
+              <Footer />
               {showOnboarding && (
                 <Onboarding onComplete={handleCompleteOnboarding} />
               )}

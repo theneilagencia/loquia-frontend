@@ -1,7 +1,7 @@
 import Image from "next/image";
 import Link from "next/link";
 
-export default function CustomFooter() {
+export default function Footer() {
   return (
     <footer className="relative bg-white border-t border-gray-200 py-16 px-6 overflow-hidden">
       {/* Animated background */}

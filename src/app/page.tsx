@@ -5,7 +5,6 @@ import CustomHowItWorks from "./components/CustomHowItWorks";
 import CustomPaidAds from "./components/CustomPaidAds";
 import CustomPlans from "./components/CustomPlans";
 import CustomFinal from "./components/CustomFinal";
-import CustomFooter from "./components/CustomFooter";
 
 export default function Home() {
   return (
@@ -19,7 +18,6 @@ export default function Home() {
         <CustomPlans />
         <CustomFinal />
       </main>
-      <CustomFooter />
     </>
   );
 }
