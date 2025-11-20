@@ -64,7 +64,7 @@ function LoginForm() {
       // Se há um plano selecionado, redirecionar para checkout
       if (plan && billing && data.user) {
         console.log("🛒 Redirecting to checkout...", { plan, billing });
-        window.location.href = `/billing/checkout?plan=${plan}&billing=${billing}`;
+        router.push(`/billing/checkout?plan=${plan}&billing=${billing}`);
         return;
       }
 
@@ -78,6 +78,8 @@ function LoginForm() {
 
       if (profileError) {
         console.error("❌ Error fetching user profile:", profileError);
+        // Se não conseguir buscar profile, assumir que é user
+        console.log("⚠️ Could not fetch profile, assuming user role");
       }
 
       const userRole = profileData?.role || 'user';
@@ -86,8 +88,16 @@ function LoginForm() {
       // Admin e superadmin não precisam de subscription
       if (userRole === 'admin' || userRole === 'superadmin') {
         console.log("✅ Admin/Superadmin user, skipping subscription check");
+        console.log("🚀 Redirecting to:", redirect || '/dashboard');
+        
+        // Usar router.push ao invés de window.location.href
         const redirectUrl = redirect || '/dashboard';
-        window.location.href = redirectUrl;
+        router.push(redirectUrl);
+        
+        // Aguardar um pouco antes de resetar loading
+        setTimeout(() => {
+          setLoading(false);
+        }, 1000);
         return;
       }
 
@@ -113,7 +123,13 @@ function LoginForm() {
 
       // Caso contrário, redirecionar para dashboard ou URL especificada
       const redirectUrl = redirect || '/dashboard';
-      window.location.href = redirectUrl;
+      console.log("🚀 Redirecting to:", redirectUrl);
+      router.push(redirectUrl);
+      
+      // Aguardar um pouco antes de resetar loading
+      setTimeout(() => {
+        setLoading(false);
+      }, 1000);
     } catch (err) {
       console.error("❌ Unexpected error:", err);
       setError("Erro inesperado ao fazer login");
@@ -163,7 +179,8 @@ function LoginForm() {
                   required
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  className="appearance-none block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-yellow-500 focus:border-yellow-500 sm:text-sm"
+                  disabled={loading}
+                  className="appearance-none block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-yellow-500 focus:border-yellow-500 sm:text-sm disabled:opacity-50 disabled:cursor-not-allowed"
                   placeholder="seu@email.com"
                 />
               </div>
@@ -186,7 +203,8 @@ function LoginForm() {
                   required
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
-                  className="appearance-none block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-yellow-500 focus:border-yellow-500 sm:text-sm"
+                  disabled={loading}
+                  className="appearance-none block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-yellow-500 focus:border-yellow-500 sm:text-sm disabled:opacity-50 disabled:cursor-not-allowed"
                   placeholder="••••••••"
                 />
               </div>
