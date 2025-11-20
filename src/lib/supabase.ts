@@ -8,46 +8,12 @@ if (!supabaseUrl || !supabaseAnonKey) {
   throw new Error('Missing Supabase environment variables')
 }
 
-// Custom storage implementation for better cookie handling
-const customStorage = {
-  getItem: (key: string) => {
-    if (typeof window === 'undefined') return null
-    return window.localStorage.getItem(key)
-  },
-  setItem: (key: string, value: string) => {
-    if (typeof window === 'undefined') return
-    window.localStorage.setItem(key, value)
-    
-    // Also set cookies for middleware
-    if (key.includes('access_token')) {
-      document.cookie = `sb-access-token=${value}; path=/; max-age=3600; SameSite=Lax`
-    }
-    if (key.includes('refresh_token')) {
-      document.cookie = `sb-refresh-token=${value}; path=/; max-age=604800; SameSite=Lax`
-    }
-  },
-  removeItem: (key: string) => {
-    if (typeof window === 'undefined') return
-    window.localStorage.removeItem(key)
-    
-    // Also remove cookies
-    if (key.includes('access_token')) {
-      document.cookie = 'sb-access-token=; path=/; max-age=0'
-    }
-    if (key.includes('refresh_token')) {
-      document.cookie = 'sb-refresh-token=; path=/; max-age=0'
-    }
-  },
-}
-
 // Create a single supabase client for interacting with your database
 export const supabase = createSupabaseClient(supabaseUrl, supabaseAnonKey, {
   auth: {
     autoRefreshToken: true,
     persistSession: true,
     detectSessionInUrl: true,
-    storage: customStorage,
-    storageKey: 'supabase.auth.token',
     flowType: 'pkce',
   },
 })
@@ -66,6 +32,12 @@ export async function signUp(email: string, password: string) {
     }
     
     console.log('✅ SignUp successful:', data.user?.email)
+    
+    // Set cookies for middleware if session exists
+    if (data.session) {
+      setSupabaseCookies(data.session.access_token, data.session.refresh_token)
+    }
+    
     return { data, error: null }
   } catch (err) {
     console.error('❌ SignUp exception:', err)
@@ -102,12 +74,8 @@ export async function signIn(email: string, password: string) {
       hasAccessToken: !!data.session.access_token,
     })
     
-    // Manually set cookies to ensure middleware can read them
-    if (data.session) {
-      document.cookie = `sb-access-token=${data.session.access_token}; path=/; max-age=3600; SameSite=Lax`
-      document.cookie = `sb-refresh-token=${data.session.refresh_token}; path=/; max-age=604800; SameSite=Lax`
-      console.log('🍪 Cookies set manually')
-    }
+    // Set cookies for middleware - use Supabase SSR format
+    setSupabaseCookies(data.session.access_token, data.session.refresh_token)
     
     return { data, error: null }
   } catch (err) {
@@ -125,9 +93,8 @@ export async function signOut() {
       return { error }
     }
     
-    // Clear cookies
-    document.cookie = 'sb-access-token=; path=/; max-age=0'
-    document.cookie = 'sb-refresh-token=; path=/; max-age=0'
+    // Clear all Supabase cookies
+    clearSupabaseCookies()
     
     console.log('✅ SignOut successful')
     return { error: null }
@@ -137,17 +104,40 @@ export async function signOut() {
   }
 }
 
-export async function getSession() {
-  const { data: { session }, error } = await supabase.auth.getSession()
-  return { session, error }
+// Helper function to set Supabase cookies in the format expected by SSR
+function setSupabaseCookies(accessToken: string, refreshToken: string) {
+  // Format: base64({"access_token":"...","refresh_token":"...",...})
+  const authData = {
+    access_token: accessToken,
+    refresh_token: refreshToken,
+    expires_in: 3600,
+    token_type: 'bearer',
+    user: null,
+  }
+  
+  const base64Data = btoa(JSON.stringify(authData))
+  
+  // Set the main auth cookie that Supabase SSR expects
+  const cookieName = `sb-${supabaseUrl.split('//')[1].split('.')[0]}-auth-token`
+  document.cookie = `${cookieName}=${base64Data}; path=/; max-age=604800; SameSite=Lax; Secure`
+  
+  // Also set individual tokens for backwards compatibility
+  document.cookie = `sb-access-token=${accessToken}; path=/; max-age=3600; SameSite=Lax; Secure`
+  document.cookie = `sb-refresh-token=${refreshToken}; path=/; max-age=604800; SameSite=Lax; Secure`
+  
+  console.log('🍪 Cookies set:', { cookieName, hasAccessToken: !!accessToken, hasRefreshToken: !!refreshToken })
 }
 
-export async function getUser() {
-  const { data: { user }, error } = await supabase.auth.getUser()
-  return { user, error }
+// Helper function to clear all Supabase cookies
+function clearSupabaseCookies() {
+  const cookieName = `sb-${supabaseUrl.split('//')[1].split('.')[0]}-auth-token`
+  
+  document.cookie = `${cookieName}=; path=/; max-age=0`
+  document.cookie = 'sb-access-token=; path=/; max-age=0'
+  document.cookie = 'sb-refresh-token=; path=/; max-age=0'
+  
+  console.log('🍪 Cookies cleared')
 }
 
-// Export function to create client (for compatibility)
-export function createClient() {
-  return supabase
-}
+// Export createClient for compatibility
+export { createSupabaseClient as createClient }
