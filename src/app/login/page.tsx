@@ -64,9 +64,7 @@ function LoginForm() {
       // Se há um plano selecionado, redirecionar para checkout
       if (plan && billing && data.user) {
         console.log("🛒 Redirecting to checkout...", { plan, billing });
-        setTimeout(() => {
-          window.location.href = `/billing/checkout?plan=${plan}&billing=${billing}`;
-        }, 500);
+        window.location.replace(`/billing/checkout?plan=${plan}&billing=${billing}`);
         return;
       }
 
@@ -93,10 +91,8 @@ function LoginForm() {
         const redirectUrl = redirect || '/dashboard';
         console.log("🚀 Redirecting to:", redirectUrl);
         
-        // Aguardar cookies serem salvos antes de redirecionar
-        setTimeout(() => {
-          window.location.href = redirectUrl;
-        }, 500);
+        // Usar replace para forçar redirecionamento
+        window.location.replace(redirectUrl);
         return;
       }
 
@@ -124,10 +120,8 @@ function LoginForm() {
       const redirectUrl = redirect || '/dashboard';
       console.log("🚀 Redirecting to:", redirectUrl);
       
-      // Aguardar cookies serem salvos antes de redirecionar
-      setTimeout(() => {
-        window.location.href = redirectUrl;
-      }, 500);
+      // Usar replace para forçar redirecionamento
+      window.location.replace(redirectUrl);
     } catch (err) {
       console.error("❌ Unexpected error:", err);
       setError("Erro inesperado ao fazer login");
