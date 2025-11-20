@@ -1,5 +1,6 @@
 import CustomNavbar from "./components/CustomNavbar";
 import CustomHero from "./components/CustomHero";
+import VideoSection from "./components/VideoSection";
 import CustomEra from "./components/CustomEra";
 import CustomHowItWorks from "./components/CustomHowItWorks";
 import CustomPaidAds from "./components/CustomPaidAds";
@@ -13,6 +14,7 @@ export default function Home() {
       <CustomNavbar />
       <main>
         <CustomHero />
+        <VideoSection />
         <CustomEra />
         <CustomHowItWorks />
         <CustomPaidAds />
