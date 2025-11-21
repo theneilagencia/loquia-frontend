@@ -2,8 +2,10 @@
 
 import { useEffect, useState } from "react";
 import Image from "next/image";
+import { useRouter } from "next/navigation";
 
 export default function CustomHero() {
+  const router = useRouter();
   const [isVisible, setIsVisible] = useState(false);
 
   useEffect(() => {
@@ -70,7 +72,10 @@ export default function CustomHero() {
             isVisible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-4"
           }`}
         >
-          <button className="px-8 py-4 bg-yellow-400 text-black font-semibold rounded-lg hover:bg-yellow-500 transition-all duration-200 shadow-sm hover:shadow-md">
+          <button 
+            onClick={() => router.push('/pricing')}
+            className="px-8 py-4 bg-yellow-400 text-black font-semibold rounded-lg hover:bg-yellow-500 transition-all duration-200 shadow-sm hover:shadow-md"
+          >
             Criar minha presença IA agora
           </button>
           <button className="px-8 py-4 bg-white text-black font-semibold rounded-lg border-2 border-gray-300 hover:border-black transition-all duration-200">
