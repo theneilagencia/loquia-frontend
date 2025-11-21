@@ -39,6 +39,17 @@ function UsersManagement() {
   const [plans, setPlans] = useState<Plan[]>([]);
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState<'all' | 'active' | 'inactive'>('all');
+  const [showCreateModal, setShowCreateModal] = useState(false);
+  const [creating, setCreating] = useState(false);
+  
+  // Form state
+  const [newUser, setNewUser] = useState({
+    email: '',
+    password: '',
+    full_name: '',
+    role: 'user' as UserRole,
+    plan_id: ''
+  });
 
   useEffect(() => {
     loadData();
@@ -56,6 +67,59 @@ function UsersManagement() {
       showError('Erro ao carregar dados');
     } finally {
       setLoading(false);
+    }
+  }
+
+  async function handleCreateUser(e: React.FormEvent) {
+    e.preventDefault();
+    
+    if (!newUser.email || !newUser.password) {
+      showError('Email e senha são obrigatórios');
+      return;
+    }
+
+    setCreating(true);
+    
+    try {
+      // Criar usuário no Supabase Auth
+      const { data: authData, error: authError } = await supabase.auth.signUp({
+        email: newUser.email,
+        password: newUser.password,
+        options: {
+          data: {
+            full_name: newUser.full_name
+          }
+        }
+      });
+
+      if (authError) throw authError;
+      if (!authData.user) throw new Error('Usuário não foi criado');
+
+      // Atualizar role no user_profiles
+      if (newUser.role !== 'user') {
+        await changeUserRole(authData.user.id, newUser.role);
+      }
+
+      // Atribuir plano se selecionado
+      if (newUser.plan_id) {
+        await assignPlanToUser(authData.user.id, newUser.plan_id);
+      }
+
+      showSuccess('Usuário criado com sucesso!');
+      setShowCreateModal(false);
+      setNewUser({
+        email: '',
+        password: '',
+        full_name: '',
+        role: 'user',
+        plan_id: ''
+      });
+      await loadData();
+    } catch (error: any) {
+      console.error('Erro ao criar usuário:', error);
+      showError(error.message || 'Erro ao criar usuário');
+    } finally {
+      setCreating(false);
     }
   }
 
@@ -139,12 +203,20 @@ function UsersManagement() {
             <h1 className="text-3xl font-bold text-gray-900">
               Gerenciar Usuários
             </h1>
-            <Link
-              href="/admin"
-              className="px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300"
-            >
-              ← Voltar
-            </Link>
+            <div className="flex gap-3">
+              <button
+                onClick={() => setShowCreateModal(true)}
+                className="px-4 py-2 bg-yellow-500 text-white rounded-lg hover:bg-yellow-600 font-semibold"
+              >
+                + Criar Usuário
+              </button>
+              <Link
+                href="/admin"
+                className="px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300"
+              >
+                ← Voltar
+              </Link>
+            </div>
           </div>
         </div>
       </header>
@@ -289,6 +361,110 @@ function UsersManagement() {
           )}
         </div>
       </main>
+
+      {/* Create User Modal */}
+      {showCreateModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-lg max-w-md w-full p-6">
+            <h2 className="text-2xl font-bold mb-4">Criar Novo Usuário</h2>
+            
+            <form onSubmit={handleCreateUser} className="space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Email *
+                </label>
+                <input
+                  type="email"
+                  required
+                  value={newUser.email}
+                  onChange={(e) => setNewUser({ ...newUser, email: e.target.value })}
+                  className="w-full border border-gray-300 rounded-lg px-3 py-2"
+                  placeholder="usuario@exemplo.com"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Senha *
+                </label>
+                <input
+                  type="password"
+                  required
+                  value={newUser.password}
+                  onChange={(e) => setNewUser({ ...newUser, password: e.target.value })}
+                  className="w-full border border-gray-300 rounded-lg px-3 py-2"
+                  placeholder="Mínimo 6 caracteres"
+                  minLength={6}
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Nome Completo
+                </label>
+                <input
+                  type="text"
+                  value={newUser.full_name}
+                  onChange={(e) => setNewUser({ ...newUser, full_name: e.target.value })}
+                  className="w-full border border-gray-300 rounded-lg px-3 py-2"
+                  placeholder="Nome do usuário"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Role
+                </label>
+                <select
+                  value={newUser.role}
+                  onChange={(e) => setNewUser({ ...newUser, role: e.target.value as UserRole })}
+                  className="w-full border border-gray-300 rounded-lg px-3 py-2"
+                >
+                  <option value="user">User</option>
+                  <option value="admin">Admin</option>
+                  <option value="superadmin">Superadmin</option>
+                </select>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Plano
+                </label>
+                <select
+                  value={newUser.plan_id}
+                  onChange={(e) => setNewUser({ ...newUser, plan_id: e.target.value })}
+                  className="w-full border border-gray-300 rounded-lg px-3 py-2"
+                >
+                  <option value="">Sem plano</option>
+                  {plans.map((plan) => (
+                    <option key={plan.id} value={plan.id}>
+                      {plan.name} - R$ {plan.price}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              <div className="flex gap-3 pt-4">
+                <button
+                  type="submit"
+                  disabled={creating}
+                  className="flex-1 bg-yellow-500 text-white py-2 rounded-lg hover:bg-yellow-600 disabled:opacity-50 disabled:cursor-not-allowed font-semibold"
+                >
+                  {creating ? 'Criando...' : 'Criar Usuário'}
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setShowCreateModal(false)}
+                  disabled={creating}
+                  className="flex-1 bg-gray-200 text-gray-700 py-2 rounded-lg hover:bg-gray-300 disabled:opacity-50"
+                >
+                  Cancelar
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
