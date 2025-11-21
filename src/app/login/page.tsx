@@ -315,15 +315,7 @@ function LoginForm() {
             </div>
           </div>
 
-          {/* Debug Link */}
-          <div className="mt-4 text-center">
-            <Link
-              href="/debug"
-              className="text-xs text-gray-400 hover:text-gray-600"
-            >
-              🔍 Página de Debug
-            </Link>
-          </div>
+
         </div>
       </div>
     </div>

@@ -3,8 +3,9 @@
 import { useEffect, useState } from "react";
 import { supabase } from "@/lib/supabase";
 import Link from "next/link";
+import RequireRole from "@/components/auth/RequireRole";
 
-export default function DebugPage() {
+function DebugContent() {
   const [info, setInfo] = useState<any>({});
   const [userProfile, setUserProfile] = useState<any>(null);
 
@@ -105,6 +106,7 @@ export default function DebugPage() {
                     : "text-gray-600"
                 }>{userProfile.role?.toUpperCase()}</span></p>
                 <p><strong>Full Name:</strong> {userProfile.full_name || "Not set"}</p>
+                <p><strong>Plan ID:</strong> {userProfile.plan_id || "Not set"}</p>
                 <p><strong>Active:</strong> {userProfile.is_active ? "✅ Yes" : "❌ No"}</p>
                 <p><strong>Created:</strong> {new Date(userProfile.created_at).toLocaleString()}</p>
               </div>
@@ -127,11 +129,11 @@ export default function DebugPage() {
             </div>
           )}
 
-          {info.currentSession === "Active" && !info.subscription && userProfile?.role === 'user' && (
+          {info.currentSession === "Active" && !info.subscription && !userProfile?.plan_id && userProfile?.role === 'user' && (
             <div className="p-4 bg-yellow-50 border border-yellow-200 rounded">
               <h3 className="font-semibold text-yellow-800 mb-2">⚠️ Aviso:</h3>
               <p className="text-sm text-yellow-700">
-                Você está logado mas não possui uma subscription ativa. 
+                Você está logado mas não possui um plano ativo. 
                 Para acessar o dashboard, você precisa assinar um plano.
               </p>
               <Link 
@@ -165,17 +167,17 @@ export default function DebugPage() {
 
           <div className="mt-4 flex gap-4">
             <Link 
-              href="/login" 
+              href="/admin" 
               className="inline-block bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700 transition"
             >
-              ← Voltar para Login
+              ← Voltar para Admin
             </Link>
             
             {info.currentSession === "Active" && (
               <button
                 onClick={async () => {
                   await supabase.auth.signOut();
-                  window.location.reload();
+                  window.location.href = '/login';
                 }}
                 className="inline-block bg-red-600 text-white px-6 py-3 rounded-lg hover:bg-red-700 transition"
               >
@@ -186,5 +188,13 @@ export default function DebugPage() {
         </div>
       </div>
     </div>
+  );
+}
+
+export default function DebugPage() {
+  return (
+    <RequireRole role="superadmin">
+      <DebugContent />
+    </RequireRole>
   );
 }

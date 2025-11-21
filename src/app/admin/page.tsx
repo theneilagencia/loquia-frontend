@@ -190,7 +190,7 @@ function AdminDashboard() {
         </div>
 
         {/* Quick Actions */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           <Link
             href="/admin/users"
             className="bg-white rounded-lg shadow p-6 hover:shadow-lg transition group"
@@ -231,6 +231,35 @@ function AdminDashboard() {
                 </h3>
                 <p className="text-sm text-gray-600 mt-1">
                   Criar, editar e gerenciar planos de assinatura
+                </p>
+              </div>
+              <svg
+                className="w-6 h-6 text-gray-400 group-hover:text-yellow-600 transition"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M9 5l7 7-7 7"
+                />
+              </svg>
+            </div>
+          </Link>
+
+          <Link
+            href="/debug"
+            className="bg-white rounded-lg shadow p-6 hover:shadow-lg transition group"
+          >
+            <div className="flex items-center justify-between">
+              <div>
+                <h3 className="text-lg font-semibold text-gray-900 group-hover:text-yellow-600 transition">
+                  🔍 Debug
+                </h3>
+                <p className="text-sm text-gray-600 mt-1">
+                  Ferramentas de debug e diagnóstico
                 </p>
               </div>
               <svg
