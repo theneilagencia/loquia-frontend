@@ -224,13 +224,25 @@ export default function CatalogPage() {
                   <label className="block text-sm font-medium text-gray-700 mb-1">
                     Categoria *
                   </label>
-                  <input
-                    type="text"
+                  <select
                     value={formData.category}
                     onChange={(e) => setFormData({ ...formData, category: e.target.value })}
                     className="w-full border border-gray-300 rounded-lg px-4 py-2"
                     required
-                  />
+                  >
+                    <option value="">Selecione uma categoria</option>
+                    <option value="Produtos">Produtos</option>
+                    <option value="Serviços">Serviços</option>
+                    <option value="Imóveis">Imóveis</option>
+                    <option value="Veículos">Veículos</option>
+                    <option value="Eletrônicos">Eletrônicos</option>
+                    <option value="Moda">Moda</option>
+                    <option value="Alimentos">Alimentos</option>
+                    <option value="Saúde">Saúde</option>
+                    <option value="Educação">Educação</option>
+                    <option value="Entretenimento">Entretenimento</option>
+                    <option value="Outros">Outros</option>
+                  </select>
                 </div>
               </div>
 
