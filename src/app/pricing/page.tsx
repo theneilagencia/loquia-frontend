@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { STRIPE_PRODUCTS, PLAN_FEATURES } from '@/lib/stripe-client';
 import Image from 'next/image';
+import CustomNavbar from '@/app/components/CustomNavbar';
 
 export default function PricingPage() {
   const router = useRouter();
@@ -42,7 +43,9 @@ export default function PricingPage() {
   }
 
   return (
-    <div className="min-h-screen bg-white py-12 px-4">
+    <>
+      <CustomNavbar />
+      <div className="min-h-screen bg-white pt-24 pb-12 px-4">
       <div className="max-w-7xl mx-auto">
         {/* Mensagem de subscription necessária */}
         {showMessage && (
@@ -246,6 +249,7 @@ export default function PricingPage() {
           </p>
         </div>
       </div>
-    </div>
+      </div>
+    </>
   );
 }
